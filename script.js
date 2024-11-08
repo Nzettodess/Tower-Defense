@@ -345,17 +345,29 @@ function handleGameStatus() {
     }
 }
 
-function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
-    handleGameGrid();
-    handleDefenders();
-    handleResources();
-    handleProjectiles();
-    handleEnemies();
-    handleGameStatus();
-    frame++;
+const fps = 24; // Set desired frames per second
+const interval = 1000 / fps; // Calculate time between frames in milliseconds
+let lastTime = 0;
+
+function animate(timestamp) {
+    const elapsed = timestamp - lastTime; // Time since last frame
+
+    if (elapsed > interval) {
+        lastTime = timestamp - (elapsed % interval); // Reset lastTime for consistent frame rate
+        
+        // Clear and draw the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
+        handleGameGrid();
+        handleDefenders();
+        handleResources();
+        handleProjectiles();
+        handleEnemies();
+        handleGameStatus();
+        frame++;
+    }
+
     if (!gameOver) requestAnimationFrame(animate);
 }
 
