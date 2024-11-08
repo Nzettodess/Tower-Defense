@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Defense Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            display: none;
+            border: 1px solid black;
+        }
+        #menu {
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>Select Stage</h1>
+        <button id="stage1">Stage 1</button>
+        <button id="stage2">Stage 2</button>
+    </div>
+    <canvas id="myCanvas"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>
