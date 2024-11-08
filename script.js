@@ -234,7 +234,7 @@ class Enemy {
         this.currentFrame = 0; // Track current frame in animation
 
         // Load each frame in the sequence
-        for (let i = 1; i <= 6; i++) {
+        for (let i = 1; i <= 7; i++) { // Loop from 1 to 7 to match the filenames
             const img = new Image();
             img.src = `WALK/WALK_${String(i).padStart(3, '0')}.png`; // Adjust path if necessary
             this.spriteImages.push(img);
