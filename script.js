@@ -217,32 +217,40 @@ function handleDefenders() {
 }
 
 // Enemies
+const enemyTypes = [
+    { size: 100, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.6, scaleY: 0.6 },
+    { size: 100, speed: 0.4, animationSpeed: 2, health: 150, spritePath: 'Sprites/Enemies/Enemy2_', numFrames: 17, scaleX: 1.3, scaleY: 1 },
+    { size: 100, speed: 0.2, animationSpeed: 1.5, health: 200, spritePath: 'Sprites/Enemies/Enemy3_', numFrames: 17, scaleX: 1.3, scaleY: 0.8 }
+];
+
 class Enemy {
-    constructor() {
-        this.x = 100; // Starting x position
-        this.y = 100; // Starting y position
-        this.width = cellSize - cellGap * 2;
-        this.height = cellSize - cellGap * 2;
-        this.speed = Math.random() * 0.5 + 0.5; // Adjust speed as needed
-        this.health = 100;
-        this.maxHealth = this.health;
-        this.pathIndex = 0; // Track current waypoint index
-        this.path = this.createPath(); // Initialize path waypoints
+    constructor(typeIndex) {
+        const typeConfig = enemyTypes[typeIndex];
 
-        // Animation setup
-        this.spriteImages = []; // Array to store sprite frames
-        this.currentFrame = 0; // Track current frame in animation
+        this.x = 100;
+        this.y = 100;
+        this.width = typeConfig.size;
+        this.height = typeConfig.size;
+        this.speed = typeConfig.speed;
+        this.health = typeConfig.health; // Set health from typeConfig
+        this.maxHealth = typeConfig.health; // Also set maxHealth
+        this.pathIndex = 0;
+        this.path = this.createPath();
+        this.animationSpeed = typeConfig.animationSpeed;
+        this.spriteImages = [];
+        this.currentFrame = 0;
+        
+        this.scaleX = typeConfig.scaleX;
+        this.scaleY = typeConfig.scaleY;
 
-        // Load each frame in the sequence
-        for (let i = 1; i <= 7; i++) { // Loop from 1 to 7 to match the filenames
+        for (let i = 1; i <= typeConfig.numFrames; i++) {
             const img = new Image();
-            img.src = `WALK/WALK_${String(i).padStart(3, '0')}.png`; // Adjust path if necessary
+            img.src = `${typeConfig.spritePath}${String(i).padStart(3, '0')}.png`;
             this.spriteImages.push(img);
         }
     }
 
     update() {
-        // Update logic for movement
         const target = this.path[this.pathIndex];
         if (target) {
             const dx = target.x - this.x;
@@ -259,20 +267,19 @@ class Enemy {
             }
         }
 
-        // Cycle through animation frames
-        this.currentFrame = (this.currentFrame + 1) % this.spriteImages.length;
+        if (frame % this.animationSpeed === 0) {
+            this.currentFrame = (this.currentFrame + 1) % this.spriteImages.length;
+        }
     }
 
     draw() {
-        // Ensure current frame image is loaded before drawing
         const currentSprite = this.spriteImages[this.currentFrame];
-        if (currentSprite.complete) { // Check if image is loaded
-            ctx.drawImage(currentSprite, this.x, this.y, this.width, this.height);
+        if (currentSprite.complete) {
+            ctx.drawImage(currentSprite, this.x, this.y, this.width * this.scaleX, this.height * this.scaleY);
         }
     }
 
     createPath() {
-        // Define a simple path for the enemy
         return [
             { x: 100, y: 100 },
             { x: 100, y: 500 },
@@ -283,7 +290,9 @@ class Enemy {
     }
 }
 
+// The handleEnemies function remains the same as before
 function handleEnemies() {
+    //  let enemiesInterval = 100;
     for (let i = 0; i < enemies.length; i++) {
         enemies[i].update();
         enemies[i].draw();
@@ -301,23 +310,18 @@ function handleEnemies() {
         }
     }
 
-    // Stage-specific enemy spawning
-    if (currentStage === 1) {
-        if (frame % enemiesInterval === 0 && score < winningScore) {
-            let path = Math.floor(Math.random() * 3); // Three paths (0, 1, 2)
-            let verticalPosition = (path * cellSize + cellGap) + cellSize; // Offset by path
-            enemies.push(new Enemy(verticalPosition));
-            enemyPositions.push(verticalPosition);
-            if (enemiesInterval > 120) enemiesInterval -= 50;
-        }
-    } else if (currentStage === 2) {
-        if (frame % enemiesInterval === 0 && score < winningScore) {
-            let path = Math.floor(Math.random() * 4); // Four paths (0, 1, 2, 3)
-            let verticalPosition = (path * cellSize + cellGap) + cellSize; // Offset by path
-            enemies.push(new Enemy(verticalPosition));
-            enemyPositions.push(verticalPosition);
-            if (enemiesInterval > 100) enemiesInterval -= 30;
-        }
+    // Enemy spawning logic
+    if (frame % enemiesInterval === 0 && score < winningScore) {
+        let path = Math.floor(Math.random() * 3); // Random path
+        let verticalPosition = (path * cellSize + cellGap) + cellSize;
+
+        // Choose a random enemy type for each spawn
+        let enemyType = Math.floor(Math.random() * enemyTypes.length);
+        enemies.push(new Enemy(enemyType));
+        enemyPositions.push(verticalPosition);
+
+        // Adjust spawn rate over time
+        if (enemiesInterval > 100) enemiesInterval -= 10;
     }
 }
 
