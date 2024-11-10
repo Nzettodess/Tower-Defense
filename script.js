@@ -4,14 +4,14 @@ canvas.width = 900;
 canvas.height = 600;
 
 // Global variables
-const cellSize = 100;
+const cellSize = 75;
 const cellGap = 3;
 let numberOfResources = 300;
 let enemiesInterval = 600;
 let frame = 0;
 let gameOver = false;
 let score = 0;
-const winningScore = 50;
+const winningScore = 1000;
 let currentStage = null; // Initialize to null
 
 const gameGrid = [];
@@ -19,6 +19,17 @@ const defenders = [];
 const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
+
+const fps = 60; // Set desired frames per second
+const interval = 1000 / fps; // Calculate time between frames in milliseconds
+let lastTime = 0;
+
+const path = [
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
+];
 
 // Mouse tracking
 const mouse = {
@@ -228,10 +239,11 @@ class Enemy {
         const typeConfig = enemyTypes[typeIndex];
 
         this.x = 100;
-        this.y = 100;
+        this.y = 50;
         this.width = typeConfig.size;
         this.height = typeConfig.size;
         this.speed = typeConfig.speed;
+        this.movement = typeConfig.speed;
         this.health = typeConfig.health; // Set health from typeConfig
         this.maxHealth = typeConfig.health; // Also set maxHealth
         this.pathIndex = 0;
@@ -257,13 +269,13 @@ class Enemy {
             const dy = target.y - this.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < this.speed) {
+            if (distance < this.movement) {
                 this.x = target.x;
                 this.y = target.y;
                 this.pathIndex++;
             } else {
-                this.x += (dx / distance) * this.speed;
-                this.y += (dy / distance) * this.speed;
+                this.x += (dx / distance) * this.movement;
+                this.y += (dy / distance) * this.movement;
             }
         }
 
@@ -281,11 +293,11 @@ class Enemy {
 
     createPath() {
         return [
-            { x: 100, y: 100 },
-            { x: 100, y: 500 },
-            { x: 500, y: 500 },
-            { x: 500, y: 200 },
-            { x: 900, y: 200 }
+            { x: path[currentStage].firstX, y: path[currentStage].firstY },
+            { x: path[currentStage].secondX, y: path[currentStage].secondY },
+            { x: path[currentStage].thirdX, y: path[currentStage].thirdY },
+            { x: path[currentStage].forthX, y: path[currentStage].forthY },
+            { x: path[currentStage].finalX, y: path[currentStage].finalY }
         ];
     }
 }
@@ -296,7 +308,7 @@ function handleEnemies() {
     for (let i = 0; i < enemies.length; i++) {
         enemies[i].update();
         enemies[i].draw();
-        if (enemies[i].x < 0) {
+        if (enemies[i].x === path[currentStage].finalX && enemies[i].y === path[currentStage].finalY) {
             gameOver = true;
         }
         if (enemies[i].health <= 0) {
@@ -349,10 +361,6 @@ function handleGameStatus() {
     }
 }
 
-const fps = 60; // Set desired frames per second
-const interval = 1000 / fps; // Calculate time between frames in milliseconds
-let lastTime = 0;
-
 function animate(timestamp) {
     const elapsed = timestamp - lastTime; // Time since last frame
 
@@ -403,6 +411,10 @@ document.getElementById('stage1').addEventListener('click', function () {
 
 document.getElementById('stage2').addEventListener('click', function () {
     startGame(2);  // Start game with stage 2
+});
+
+document.getElementById('stage3').addEventListener('click', function () {
+    startGame(3);  // Start game with stage 2
 });
 
 // Handle window resize
