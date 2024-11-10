@@ -349,7 +349,7 @@ function handleGameStatus() {
     }
 }
 
-const fps = 24; // Set desired frames per second
+const fps = 60; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
