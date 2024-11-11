@@ -11,7 +11,7 @@ let enemiesInterval = 600;
 let frame = 0;
 let gameOver = false;
 let score = 0;
-const winningScore = 1000;
+const winningScore = 50;
 let currentStage = null; // Initialize to null
 
 const gameGrid = [];
@@ -20,14 +20,66 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 60; // Set desired frames per second
+const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
+// Game state controls
+let gamePaused = false;
+let gameStarted = false;
+
+const TILE_TYPES = {
+    GRASS: 0,
+    PATH: 1,
+    OBSTACLE: 2
+};
+
+const tileImages = {
+    [TILE_TYPES.GRASS]: 'Sprites/Background/1 Tiles/FieldsTile_01.png',
+    [TILE_TYPES.PATH]: 'Sprites/Background/1 Tiles/FieldsTile_40.png', // example path for path tile
+    [TILE_TYPES.OBSTACLE]: 'Sprites/Background/1 Tiles/FieldsTile_01.png' // example path for obstacle tile
+};
+
+const loadedImages = {};
+for (const type in tileImages) {
+    const img = new Image();
+    img.src = tileImages[type];
+    loadedImages[type] = img;
+}
+
+const stageMaps = {
+    1: [
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    2: [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0],
+        [0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    3: [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0],
+        [0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+};
+
 const path = [
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
     { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
 ];
 
@@ -58,13 +110,20 @@ const controlsBar = {
 
 // Game cells
 class Cell {
-    constructor(x, y) {
+    constructor(x, y, type) {
         this.x = x;
         this.y = y;
         this.width = cellSize;
         this.height = cellSize;
+        this.type = type;
     }
     draw() {
+
+        const img = loadedImages[this.type];
+        if (img.complete) { // Check if the image is loaded
+            ctx.drawImage(img, this.x, this.y, this.width, this.height);
+        }
+
         if (mouse.x && mouse.y && collision(this, mouse)) {
             ctx.strokeStyle = 'black';
             ctx.strokeRect(this.x, this.y, this.width, this.height);
@@ -73,13 +132,20 @@ class Cell {
 }
 
 function createGrid() {
-    for (let y = cellSize; y < canvas.height; y += cellSize) {
-        for (let x = 0; x < canvas.width; x += cellSize) {
-            gameGrid.push(new Cell(x, y));
+    gameGrid.length = 0;
+
+    const layout = stageMaps[currentStage];
+    if (!layout) return; // Exit if no layout is defined for the current stage
+
+    for (let row = 0; row < layout.length; row++) {
+        for (let col = 0; col < layout[row].length; col++) {
+            const type = layout[row][col]; // Get tile type from array
+            const x = col * cellSize;
+            const y = row * cellSize;
+            gameGrid.push(new Cell(x, y, type));
         }
     }
 }
-createGrid();
 
 function handleGameGrid() {
     for (let i = 0; i < gameGrid.length; i++) {
@@ -229,7 +295,7 @@ function handleDefenders() {
 
 // Enemies
 const enemyTypes = [
-    { size: 100, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.6, scaleY: 0.6 },
+    { size: 100, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.3, scaleY: 0.3 },
     { size: 100, speed: 0.4, animationSpeed: 2, health: 150, spritePath: 'Sprites/Enemies/Enemy2_', numFrames: 17, scaleX: 1.3, scaleY: 1 },
     { size: 100, speed: 0.2, animationSpeed: 1.5, health: 200, spritePath: 'Sprites/Enemies/Enemy3_', numFrames: 17, scaleX: 1.3, scaleY: 0.8 }
 ];
@@ -362,6 +428,8 @@ function handleGameStatus() {
 }
 
 function animate(timestamp) {
+    if (gamePaused || !gameStarted) return; // Skip animation if paused or not started
+
     const elapsed = timestamp - lastTime; // Time since last frame
 
     if (elapsed > interval) {
@@ -392,16 +460,57 @@ function collision(first, second) {
     }
 }
 
+function resetGame() {
+  numberOfResources = 300;
+  enemiesInterval = 600;
+  frame = 0;
+  gameOver = false;
+  score = 0;
+
+  // Clear all game elements
+  gameGrid.length = 0;
+  defenders.length = 0;
+  enemies.length = 0;
+  enemyPositions.length = 0;
+  projectiles.length = 0;
+
+  createGrid(); // Recreate the game grid
+}
+
+// Button Event Listeners
+document.getElementById('startButton').addEventListener('click', () => {
+  if (!gameStarted) {
+    gameStarted = true;
+    gamePaused = false;
+    requestAnimationFrame(animate);
+  } else if (gamePaused) {
+    gamePaused = false;
+    requestAnimationFrame(animate); // Resume animation
+  }
+});
+
+document.getElementById('pauseButton').addEventListener('click', () => {
+  gamePaused = true;
+});
+
+document.getElementById('restartButton').addEventListener('click', () => {
+  resetGame();
+  gameStarted = true;
+  gamePaused = false;
+  requestAnimationFrame(animate);
+});
+
+
 // Start Game Function
 function startGame(stage) {
-    currentStage = stage;  // Store selected stage
-    document.getElementById('menu').style.display = 'none';
-    canvas.style.display = 'block';
-
-    // Update canvas position after it becomes visible
-    canvasPosition = canvas.getBoundingClientRect();
-    
-    animate();
+  currentStage = stage;
+  document.getElementById('menu').style.display = 'none';
+  canvas.style.display = 'block';
+  document.getElementById('gameControls').style.display = 'flex'; // Show controls
+  resetGame(); // Reset the game on new stage
+  createGrid();
+  gameStarted = true;
+  requestAnimationFrame(animate);
 }
 
 // Stage Selection Buttons
