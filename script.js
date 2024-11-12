@@ -589,6 +589,7 @@ function resetGame() {
   gameOver = false;
   score = 0;
   playerHealth = maxHealth;
+  gameWin = false
 
   // Clear all game elements
   gameGrid.length = 0;
