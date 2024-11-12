@@ -17,9 +17,9 @@ let currentStage = null; // Initialize to null
 const maxHealth = 5; // Maximum health
 let playerHealth = maxHealth; // Current health
 const healthBarWidth = 150; // Width of the health bar
-const healthBarHeight = 20; // Height of the health bar
+const healthBarHeight = 35; // Height of the health bar
 const healthBarX = 700; // X position of the health bar
-const healthBarY = 40; // Y position of the health bar
+const healthBarY = 20; // Y position of the health bar
 
 const gameGrid = [];
 const defenders = [];
@@ -117,7 +117,7 @@ const controlsBar = {
 
 function drawHealthBar() {
     // Draw the border of the health bar
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = 'gold';
     ctx.lineWidth = 2;
     ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
 
@@ -126,7 +126,7 @@ function drawHealthBar() {
     const filledWidth = healthBarWidth * healthRatio;
 
     // Draw the filled portion
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = 'lightgreen';
     ctx.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
 }
 
@@ -237,9 +237,9 @@ class Defender {
 
         // Array to hold sprite images
         this.sprites = [
-            'Sprites/Defender/Tower1_001.png',  // Level 1
-            'Sprites/Defender/Tower1_002.png',  // Level 2
-            'Sprites/Defender/Tower1_003.png'   // Level 3 (max level)
+            'Sprites/Defender/Tower2_001.png',  // Level 1
+            'Sprites/Defender/Tower2_002.png',  // Level 2
+            'Sprites/Defender/Tower2_003.png'   // Level 3 (max level)
         ];
 
         this.currentSpriteIndex = 0; // Start with the first sprite
@@ -293,9 +293,9 @@ class Defender {
             ctx.drawImage(this.spriteImage, this.x, this.y, this.width * this.scaleX, this.height * this.scaleY);
         }
         // Draw health text
-        ctx.fillStyle = 'gold';
+        ctx.fillStyle = 'white';
         ctx.font = '20px Arial';
-        ctx.fillText(Math.floor(this.health), this.x + 10, this.y + 20);
+        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 20);
     }
 
     update() {
@@ -498,9 +498,9 @@ function handleResources() {
     ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
     ctx.fillStyle = 'gold';
     ctx.font = '30px Arial';
-    ctx.fillText('Resources: ' + numberOfResources, 20, 40);
-    ctx.fillText('Score: ' + score, 20, 80);
-    ctx.fillText('Level: ' + (currentStage !== null ? currentStage : 'N/A'), 20, 120);
+    ctx.fillText('Resources: ' + numberOfResources, 20, 45);
+    ctx.fillText('|   Score: ' + score, 270, 45);
+    ctx.fillText('|  Level: ' + (currentStage !== null ? currentStage : 'N/A'), 450, 45);
 
     drawHealthBar();
 }
