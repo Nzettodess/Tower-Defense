@@ -10,6 +10,7 @@ let numberOfResources = 300;
 let enemiesInterval = 600;
 let frame = 0;
 let gameOver = false;
+let gameWin = false;
 let score = 0;
 const winningScore = 50;
 let currentStage = null; // Initialize to null
@@ -27,7 +28,7 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 360; // Set desired frames per second
+const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
@@ -510,8 +511,12 @@ function handleGameStatus() {
     let text, subText;
 
     if (gameOver) {
-        text = 'GAME OVER';    } else if (score >= winningScore) {
-        text = 'LEVEL COMPLETE';        subText = 'You win with ' + score + ' points!';
+        text = 'GAME OVER';    
+    } 
+    else if (score >= winningScore) {
+        text = 'LEVEL COMPLETE';        
+        subText = 'You win with ' + score + ' points!';
+        gameWin = true;
     } 
     else {        
         return; // Exit if neither game over nor level complete
@@ -565,7 +570,7 @@ function animate(timestamp) {
         frame++;
     }
 
-    if (!gameOver) requestAnimationFrame(animate);
+    if (!gameOver && !gameWin) requestAnimationFrame(animate);
 }
 
 function collision(first, second) {
