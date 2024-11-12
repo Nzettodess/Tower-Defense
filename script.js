@@ -233,15 +233,69 @@ class Defender {
         this.shooting = false;
         this.health = 100;
         this.timer = 0;
-        this.range = 200;  // Define the attack range of the defender
+        this.range = 200;
+
+        // Array to hold sprite images
+        this.sprites = [
+            'Sprites/Defender/Tower1_001.png',  // Level 1
+            'Sprites/Defender/Tower1_002.png',  // Level 2
+            'Sprites/Defender/Tower1_003.png'   // Level 3 (max level)
+        ];
+
+        this.currentSpriteIndex = 0; // Start with the first sprite
+        this.spriteImage = new Image();
+        this.spriteImage.src = this.sprites[this.currentSpriteIndex]; // Set initial sprite image
+        this.scaleX = 1; // Define any scaling as needed
+        this.scaleY = 1;
+        this.upgradable = true;  // Track whether the defender can still be upgraded
+
+        // Initial attack speed
+        this.attackSpeed = 100;  // Base attack speed in ms (Level 1)
+    }
+
+    // Method to upgrade the sprite and attack speed (called when clicked)
+    upgrade() {
+        // Define the resource costs for upgrades
+        let upgradeCost = 0;
+        if (this.currentSpriteIndex === 0) {  // From Level 1 to Level 2
+            upgradeCost = 200;
+        } else if (this.currentSpriteIndex === 1) {  // From Level 2 to Level 3
+            upgradeCost = 300;
+        }
+
+        // Check if the player has enough resources
+        if (numberOfResources >= upgradeCost && this.upgradable) {
+            // Deduct the resources
+            numberOfResources -= upgradeCost;
+
+            // Upgrade only if there are higher levels available
+            if (this.currentSpriteIndex < this.sprites.length - 1) {
+                this.currentSpriteIndex++; // Move to the next sprite
+                this.spriteImage.src = this.sprites[this.currentSpriteIndex]; // Update the sprite image
+            }
+
+            // Once the defender reaches the last sprite, it can't be upgraded further
+            if (this.currentSpriteIndex === this.sprites.length - 1) {
+                this.upgradable = false; // No further upgrades
+            }
+
+            // Increase attack speed with each upgrade
+            if (this.currentSpriteIndex === 1) {
+                this.attackSpeed = 50;  // Attack speed at Level 2 (faster shooting)
+            } else if (this.currentSpriteIndex === 2) {
+                this.attackSpeed = 30;  // Attack speed at Level 3 (fastest shooting)
+            }
+        }
     }
 
     draw() {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if (this.spriteImage.complete) {
+            ctx.drawImage(this.spriteImage, this.x, this.y, this.width * this.scaleX, this.height * this.scaleY);
+        }
+        // Draw health text
         ctx.fillStyle = 'gold';
-        ctx.font = '30px Arial';
-        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 30);
+        ctx.font = '20px Arial';
+        ctx.fillText(Math.floor(this.health), this.x + 10, this.y + 20);
     }
 
     update() {
@@ -255,7 +309,7 @@ class Defender {
 
             if (distance <= this.range) {
                 targetEnemy = enemy;
-                break;  // Only target the first enemy in range
+                break;
             }
         }
 
@@ -263,8 +317,9 @@ class Defender {
         if (targetEnemy) {
             this.shooting = true;
             this.timer++;
-            if (this.timer % 100 === 0) {
-                // Create a projectile aimed at the target enemy
+
+            // Shoot only at intervals based on the attack speed
+            if (this.timer % this.attackSpeed === 0) {
                 const angle = Math.atan2(targetEnemy.y - this.y, targetEnemy.x - this.x);
                 projectiles.push(new Projectile(this.x + this.width / 2, this.y + this.height / 2, angle));
             }
@@ -275,14 +330,17 @@ class Defender {
     }
 }
 
+// Event listener for clicking on a defender to upgrade its sprite and attack speed
 canvas.addEventListener('click', function () {
     const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
     const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
     if (gridPositionY < cellSize) return;
 
     for (let i = 0; i < defenders.length; i++) {
-        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY)
+        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) {
+            defenders[i].upgrade(); // Upgrade the defender on click
             return;
+        }
     }
 
     let defenderCost = 100;
@@ -291,6 +349,8 @@ canvas.addEventListener('click', function () {
         numberOfResources -= defenderCost;
     }
 });
+
+
 
 function handleDefenders() {
     for (let i = 0; i < defenders.length; i++) {
@@ -317,7 +377,7 @@ function handleDefenders() {
 
 // Enemies
 const enemyTypes = [
-    { size: 100, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.3, scaleY: 0.3 },
+    { size: 75, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.3, scaleY: 0.3 },
     { size: 100, speed: 0.4, animationSpeed: 2, health: 150, spritePath: 'Sprites/Enemies/Enemy2_', numFrames: 17, scaleX: 1.3, scaleY: 1 },
     { size: 100, speed: 0.2, animationSpeed: 1.5, health: 200, spritePath: 'Sprites/Enemies/Enemy3_', numFrames: 17, scaleX: 1.3, scaleY: 0.8 }
 ];
@@ -518,7 +578,7 @@ function collision(first, second) {
 }
 
 function resetGame() {
-  numberOfResources = 300;
+  numberOfResources = 1000;
   enemiesInterval = 600;
   frame = 0;
   gameOver = false;
