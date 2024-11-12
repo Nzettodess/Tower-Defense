@@ -56,14 +56,14 @@ for (const type in tileImages) {
 
 const stageMaps = {
     1: [
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ],
     2: [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -85,7 +85,7 @@ const stageMaps = {
 
 const path = [
     { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+    { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
     { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
     { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
 ];
@@ -377,9 +377,9 @@ function handleDefenders() {
 
 // Enemies
 const enemyTypes = [
-    { size: 75, speed: 0.3, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/Enemy1_', numFrames: 7, scaleX: 0.3, scaleY: 0.3 },
-    { size: 100, speed: 0.4, animationSpeed: 2, health: 150, spritePath: 'Sprites/Enemies/Enemy2_', numFrames: 17, scaleX: 1.3, scaleY: 1 },
-    { size: 100, speed: 0.2, animationSpeed: 1.5, health: 200, spritePath: 'Sprites/Enemies/Enemy3_', numFrames: 17, scaleX: 1.3, scaleY: 0.8 }
+    { size: 50, speed: 0.5, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/slime1_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 70, speed: 0.4, animationSpeed: 3, health: 150, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 80, speed: 0.2, animationSpeed: 3, health: 200, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
 ];
 
 class Enemy {
