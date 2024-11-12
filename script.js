@@ -14,13 +14,20 @@ let score = 0;
 const winningScore = 50;
 let currentStage = null; // Initialize to null
 
+const maxHealth = 5; // Maximum health
+let playerHealth = maxHealth; // Current health
+const healthBarWidth = 150; // Width of the health bar
+const healthBarHeight = 20; // Height of the health bar
+const healthBarX = 700; // X position of the health bar
+const healthBarY = 40; // Y position of the health bar
+
 const gameGrid = [];
 const defenders = [];
 const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 120; // Set desired frames per second
+const fps = 360; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
@@ -107,6 +114,21 @@ const controlsBar = {
     width: canvas.width,
     height: cellSize,
 };
+
+function drawHealthBar() {
+    // Draw the border of the health bar
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+
+    // Calculate width of filled portion
+    const healthRatio = playerHealth / maxHealth;
+    const filledWidth = healthBarWidth * healthRatio;
+
+    // Draw the filled portion
+    ctx.fillStyle = 'red';
+    ctx.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
+}
 
 // Game cells
 class Cell {
@@ -375,8 +397,16 @@ function handleEnemies() {
         enemies[i].update();
         enemies[i].draw();
         if (enemies[i].x === path[currentStage].finalX && enemies[i].y === path[currentStage].finalY) {
-            gameOver = true;
+            playerHealth -= 1;
+            enemies.splice(i, 1); 
+            i--;  
+
+            if (playerHealth <= 0) {
+                gameOver = true; // End game if health is depleted
+            }
+            continue;
         }
+
         if (enemies[i].health <= 0) {
             let gainedResources = enemies[i].maxHealth / 10;
             numberOfResources += gainedResources;
@@ -411,20 +441,47 @@ function handleResources() {
     ctx.fillText('Resources: ' + numberOfResources, 20, 40);
     ctx.fillText('Score: ' + score, 20, 80);
     ctx.fillText('Level: ' + (currentStage !== null ? currentStage : 'N/A'), 20, 120);
+
+    drawHealthBar();
 }
 
-function handleGameStatus() {
+function handleGameStatus() {    
+
+    let text, subText;
+
     if (gameOver) {
-        ctx.fillStyle = 'black';
-        ctx.font = '60px Arial';
-        ctx.fillText('GAME OVER', 230, 300);
-    } else if (score >= winningScore) {
-        ctx.fillStyle = 'black';
-        ctx.font = '60px Arial';
-        ctx.fillText('LEVEL COMPLETE', 130, 300);
-        ctx.font = '30px Arial';
-        ctx.fillText('You win with ' + score + ' points!', 134, 340);
+        text = 'GAME OVER';    } else if (score >= winningScore) {
+        text = 'LEVEL COMPLETE';        subText = 'You win with ' + score + ' points!';
+    } 
+    else {        
+        return; // Exit if neither game over nor level complete
     }
+
+    // Center of the canvas    
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+
+    // Draw background rectangle centered on the canvas    
+    const windowWidth = 600;
+    const windowHeight = 400;    
+    const windowX = canvasCenterX - windowWidth / 2;
+    const windowY = canvasCenterY - windowHeight / 2;    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent black background
+    ctx.fillRect(windowX, windowY, windowWidth, windowHeight);
+    // Draw main text centered    
+    ctx.font = '60px Arial';
+    ctx.fillStyle = 'white';    
+    const textWidth = ctx.measureText(text).width;
+    const textX = canvasCenterX - textWidth / 2;    
+    const textY = canvasCenterY - 20; // Center main text slightly above the middle
+    ctx.fillText(text, textX, textY);
+    // Draw subtext if it exists, centered below the main text    
+    if (subText) {
+        ctx.font = '30px Arial';        
+        const subTextWidth = ctx.measureText(subText).width;
+        const subTextX = canvasCenterX - subTextWidth / 2;        
+        const subTextY = textY + 40; // Position below main text
+        ctx.fillText(subText, subTextX, subTextY);    }
 }
 
 function animate(timestamp) {
@@ -466,6 +523,7 @@ function resetGame() {
   frame = 0;
   gameOver = false;
   score = 0;
+  playerHealth = maxHealth;
 
   // Clear all game elements
   gameGrid.length = 0;
