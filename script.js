@@ -49,6 +49,23 @@ const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
+playButton.addEventListener('click', () => {
+    bgMusic.play().catch((err) => {
+        console.log('User interaction required to play music:', err);
+    });
+    startGame(); // Function to initialize game state
+    playButton.style.display = 'none'; // Hide the play button after starting the game
+});
+
+// Function to draw the initial game screen
+function drawMenuScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText("Click 'Start Game' to begin", canvas.width / 2 - 140, canvas.height / 2);
+}
+
+drawMenuScreen();
 // Game state controls
 let gamePaused = false;
 let gameStarted = false;
@@ -746,3 +763,4 @@ window.addEventListener('load', function () {
     // This is added to allow any page load event to trigger the interaction if needed.
     handleInteraction();
 });
+
