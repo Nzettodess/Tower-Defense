@@ -4,7 +4,7 @@ canvas.width = 900;
 canvas.height = 600;
 
 //Define the audio asset
-// const mainTheme = document.getElementById('mainTheme');
+//const mainTheme = document.getElementById('mainTheme');
 
 const bgMusic = new Audio('Audio/bg-ambience.mp3'); 
 bgMusic.loop = true; // Loop the bgm
@@ -63,9 +63,9 @@ const TILE_TYPES = {
 };
 
 const tileImages = {
-    [TILE_TYPES.GRASS]: 'Sprites/Background/1 Tiles/FieldsTile_01.png',
-    [TILE_TYPES.PATH]: 'Sprites/Background/1 Tiles/FieldsTile_40.png', // example path for path tile
-    [TILE_TYPES.OBSTACLE]: 'Sprites/Background/1 Tiles/FieldsTile_01.png' // example path for obstacle tile
+    [TILE_TYPES.GRASS]: 'Sprites/Background/4 Test/tile000.png',
+    [TILE_TYPES.PATH]: 'Sprites/Background/4 Test/tile039.png', // example path for path tile
+    [TILE_TYPES.OBSTACLE]: 'Sprites/Background/4 Test/tile000.png' // example path for obstacle tile
 };
 
 const loadedImages = {};
@@ -148,7 +148,7 @@ function handleInteraction() {
 
 function drawHealthBar() {
     // Draw the border of the health bar
-    ctx.strokeStyle = 'gold';
+    ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
     ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
 
@@ -157,7 +157,7 @@ function drawHealthBar() {
     const filledWidth = healthBarWidth * healthRatio;
 
     // Draw the filled portion
-    ctx.fillStyle = 'lightgreen';
+    ctx.fillStyle = '#198c1f';
     ctx.fillRect(healthBarX, healthBarY, filledWidth, healthBarHeight);
 }
 
@@ -539,9 +539,14 @@ function handleEnemies() {
 }
 
 function handleResources() {
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = '#424f34';
     ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
-    ctx.fillStyle = 'gold';
+    // Draw the black border around the resource bar area
+    ctx.strokeStyle = 'black'; // Black border color for the bar
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, controlsBar.width, controlsBar.height);
+    
+    ctx.fillStyle = '#e2e391';
     ctx.font = '30px Arial';
     ctx.fillText('Resources: ' + numberOfResources, 20, 45);
     ctx.fillText('|   Score: ' + score, 270, 45);
