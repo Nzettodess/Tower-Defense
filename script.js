@@ -9,9 +9,15 @@ const mainTheme = document.getElementById('mainTheme');
 const bgMusic = new Audio('Audio/bg-ambience.mp3'); 
 bgMusic.loop = true; // Loop the bgm
 
+const hitEnemySound = new Audio('Audio/enemy get hit.mp3');
+const enemyDieSound = new Audio('Audio/enemy die.mp3');
 const uiInteractionSound = new Audio ('Audio/ui interaction.mp3');
 const buildTowerSound = new Audio('Audio/build tower.mp3');
 const upgradeTowerSound = new Audio('Audio/tower upgrade.mp3');
+const destroyTowerSound = new Audio('Audio/tower destroyed.mp3');
+const gameCompleteSound = new Audio('Audio/game-level-complete.mp3');
+const gameOverSound = new Audio('Audio/game over.mp3');
+const hpDrop = new Audio('Audio/player hp drop.mp3');
 
 // Global variables
 const cellSize = 75;
@@ -233,6 +239,8 @@ function handleProjectiles() {
         for (let j = 0; j < enemies.length; j++) {
             if (enemies[j] && projectiles[i] && collision(projectiles[i], enemies[j])) {
                 enemies[j].health -= projectiles[i].power;
+                hitEnemySound.currentTime = 0;
+                hitEnemySound.play();
                 projectiles.splice(i, 1);
                 i--;
             }
@@ -394,6 +402,8 @@ function handleDefenders() {
                 enemies[j].movement = 0;
                 defenders[i].health -= 1;
                 if (defenders[i] && defenders[i].health <= 0) {
+                    destroyTowerSound.currentTime = 0;
+                    destroyTowerSound.play();
                     defenders.splice(i, 1);
                     i--;
                     enemies[j].movement = enemies[j].speed;
@@ -485,6 +495,8 @@ function handleEnemies() {
         enemies[i].update();
         enemies[i].draw();
         if (enemies[i].x === path[currentStage].finalX && enemies[i].y === path[currentStage].finalY) {
+            hpDrop.currentTime = 0;
+            hpDrop.play();
             playerHealth -= 1;
             enemies.splice(i, 1); 
             i--;  
@@ -503,6 +515,8 @@ function handleEnemies() {
             enemyPositions.splice(findThisIndex, 1);
             enemies.splice(i, 1);
             i--;
+            enemyDieSound.currentTime = 0;
+            enemyDieSound.play();
         }
     }
 
@@ -541,6 +555,8 @@ function handleGameStatus() {
         text = 'GAME OVER';
         bgMusic.pause();
         bgMusic.currentTime = 0;
+        gameOverSound.currentTime = 0;
+        gameOverSound.play();
     } 
     else if (score >= winningScore) {
         text = 'LEVEL COMPLETE';        
@@ -548,6 +564,8 @@ function handleGameStatus() {
         gameWin = true;
         bgMusic.pause();
         bgMusic.currentTime = 0;
+        gameCompleteSound.currentTime = 0;
+        gameCompleteSound.play();
     } 
     else {        
         return; // Exit if neither game over nor level complete
