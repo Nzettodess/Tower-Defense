@@ -4,11 +4,11 @@ canvas.width = 900;
 canvas.height = 600;
 
 //Define the audio asset
-const mainTheme = document.getElementById('mainTheme');
+// const mainTheme = document.getElementById('mainTheme');
 
 const bgMusic = new Audio('Audio/bg-ambience.mp3'); 
 bgMusic.loop = true; // Loop the bgm
-
+const openingtheme = new Audio('Audio/main theme song.mp3'); 
 const hitEnemySound = new Audio('Audio/enemy get hit.mp3');
 const enemyDieSound = new Audio('Audio/enemy die.mp3');
 const uiInteractionSound = new Audio ('Audio/ui interaction.mp3');
@@ -49,23 +49,9 @@ const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
-playButton.addEventListener('click', () => {
-    bgMusic.play().catch((err) => {
-        console.log('User interaction required to play music:', err);
-    });
-    startGame(); // Function to initialize game state
-    playButton.style.display = 'none'; // Hide the play button after starting the game
-});
+let hasInteracted = false;
 
-// Function to draw the initial game screen
-function drawMenuScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "black";
-    ctx.font = "30px Arial";
-    ctx.fillText("Click 'Start Game' to begin", canvas.width / 2 - 140, canvas.height / 2);
-}
 
-drawMenuScreen();
 // Game state controls
 let gamePaused = false;
 let gameStarted = false;
@@ -153,7 +139,7 @@ const controlsBar = {
 function handleInteraction() {
     if (!hasInteracted) {
         hasInteracted = true;
-        mainTheme.play().catch(err => {
+        openingtheme.play().catch(err => {
             console.log('Error playing main theme:', err);
         });
     } 
@@ -716,8 +702,8 @@ function startGame(stage) {
   createGrid();
   gameStarted = true;
 
-  mainTheme.pause(); //Pause the main theme when enter gameplay
-  mainTheme.currentTime = 0;
+  openingtheme.pause(); //Pause the main theme when enter gameplay
+  openingtheme.currentTime = 0;
 
   bgMusic.play();
   requestAnimationFrame(animate);
@@ -763,4 +749,5 @@ window.addEventListener('load', function () {
     // This is added to allow any page load event to trigger the interaction if needed.
     handleInteraction();
 });
+
 
