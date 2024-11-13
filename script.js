@@ -3,6 +3,16 @@ const ctx = canvas.getContext('2d');
 canvas.width = 900;
 canvas.height = 600;
 
+//Define the audio asset
+const mainTheme = document.getElementById('mainTheme');
+
+const bgMusic = new Audio('Audio/bg-ambience.mp3'); 
+bgMusic.loop = true; // Loop the bgm
+
+const uiInteractionSound = new Audio ('Audio/ui interaction.mp3');
+const buildTowerSound = new Audio('Audio/build tower.mp3');
+const upgradeTowerSound = new Audio('Audio/tower upgrade.mp3');
+
 // Global variables
 const cellSize = 75;
 const cellGap = 3;
@@ -14,6 +24,7 @@ let gameWin = false;
 let score = 0;
 const winningScore = 50;
 let currentStage = null; // Initialize to null
+let hasInterated = false;
 
 const maxHealth = 5; // Maximum health
 let playerHealth = maxHealth; // Current health
@@ -115,6 +126,16 @@ const controlsBar = {
     width: canvas.width,
     height: cellSize,
 };
+
+function handleInteraction() {
+    if (!hasInteracted) {
+        hasInteracted = true;
+        mainTheme.play().catch(err => {
+            console.log('Error playing main theme:', err);
+        });
+    } 
+    
+}
 
 function drawHealthBar() {
     // Draw the border of the health bar
@@ -266,6 +287,10 @@ class Defender {
 
         // Check if the player has enough resources
         if (numberOfResources >= upgradeCost && this.upgradable) {
+           //Reset and play the upgrade sound effect
+           upgradeTowerSound.currentTime = 0;  // Reset the sound to the beginning
+           upgradeTowerSound.play();
+
             // Deduct the resources
             numberOfResources -= upgradeCost;
 
@@ -346,6 +371,8 @@ canvas.addEventListener('click', function () {
 
     let defenderCost = 100;
     if (numberOfResources >= defenderCost) {
+        buildTowerSound.currentTime = 0; //Reset the sound effect of build tower
+        buildTowerSound.play();
         defenders.push(new Defender(gridPositionX, gridPositionY));
         numberOfResources -= defenderCost;
     }
@@ -511,12 +538,16 @@ function handleGameStatus() {
     let text, subText;
 
     if (gameOver) {
-        text = 'GAME OVER';    
+        text = 'GAME OVER';
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
     } 
     else if (score >= winningScore) {
         text = 'LEVEL COMPLETE';        
         subText = 'You win with ' + score + ' points!';
         gameWin = true;
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
     } 
     else {        
         return; // Exit if neither game over nor level complete
@@ -603,7 +634,11 @@ function resetGame() {
 
 // Button Event Listeners
 document.getElementById('startButton').addEventListener('click', () => {
-  if (!gameStarted) {
+  // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
+  
+    if (!gameStarted) {
     gameStarted = true;
     gamePaused = false;
     requestAnimationFrame(animate);
@@ -611,17 +646,28 @@ document.getElementById('startButton').addEventListener('click', () => {
     gamePaused = false;
     requestAnimationFrame(animate); // Resume animation
   }
+  bgMusic.play();
 });
 
 document.getElementById('pauseButton').addEventListener('click', () => {
+  // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
+
   gamePaused = true;
+  bgMusic.pause();
 });
 
 document.getElementById('restartButton').addEventListener('click', () => {
+  // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
+
   resetGame();
   gameStarted = true;
   gamePaused = false;
   requestAnimationFrame(animate);
+  bgMusic.currentTime = 0;
 });
 
 
@@ -634,23 +680,51 @@ function startGame(stage) {
   resetGame(); // Reset the game on new stage
   createGrid();
   gameStarted = true;
+
+  mainTheme.pause(); //Pause the main theme when enter gameplay
+  mainTheme.currentTime = 0;
+
+  bgMusic.play();
   requestAnimationFrame(animate);
+}
+
+
+function endGame(win) {
+    gameOver = true;
+    gameWin = win;
 }
 
 // Stage Selection Buttons
 document.getElementById('stage1').addEventListener('click', function () {
+    // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
     startGame(1);  // Start game with stage 1
+    handleInteraction();
 });
 
 document.getElementById('stage2').addEventListener('click', function () {
+   // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
     startGame(2);  // Start game with stage 2
+    handleInteraction();
 });
 
 document.getElementById('stage3').addEventListener('click', function () {
+   // Play interaction sound
+  uiInteractionSound.currentTime = 0;
+  uiInteractionSound.play();
     startGame(3);  // Start game with stage 2
+    handleInteraction();
 });
 
 // Handle window resize
 window.addEventListener('resize', function () {
     canvasPosition = canvas.getBoundingClientRect();
+});
+
+window.addEventListener('load', function () {
+    // This is added to allow any page load event to trigger the interaction if needed.
+    handleInteraction();
 });
