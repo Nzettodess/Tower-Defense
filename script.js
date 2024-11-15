@@ -22,13 +22,13 @@ const hpDrop = new Audio('Audio/player hp drop.mp3');
 // Global variables
 const cellSize = 75;
 const cellGap = 3;
-let numberOfResources = 300;
+let numberOfResources = 500;
 let enemiesInterval = 600;
 let frame = 0;
 let gameOver = false;
 let gameWin = false;
 let score = 0;
-const winningScore = 50;
+let winningScore = 50;
 let currentStage = null; // Initialize to null
 let hasInterated = false;
 
@@ -45,7 +45,7 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 120; // Set desired frames per second
+const fps = 60; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
@@ -108,12 +108,22 @@ const stageMaps = {
     ]
 };
 
-const path = [
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-    { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
-];
+const path = {
+    1: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }],
+
+    2: [{ firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
+        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
+        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
+        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 }],
+
+    3: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
+        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }]
+}
 
 // Mouse tracking
 const mouse = {
@@ -440,7 +450,7 @@ class Enemy {
         this.health = typeConfig.health; // Set health from typeConfig
         this.maxHealth = typeConfig.health; // Also set maxHealth
         this.pathIndex = 0;
-        this.path = this.createPath();
+        this.path = this.createPath(path[currentStage]);
         this.animationSpeed = typeConfig.animationSpeed;
         this.spriteImages = [];
         this.currentFrame = 0;
@@ -484,13 +494,14 @@ class Enemy {
         }
     }
 
-    createPath() {
+    createPath(pathArray) {
+        const pathData = pathArray[currentStage];
         return [
-            { x: path[currentStage].firstX, y: path[currentStage].firstY },
-            { x: path[currentStage].secondX, y: path[currentStage].secondY },
-            { x: path[currentStage].thirdX, y: path[currentStage].thirdY },
-            { x: path[currentStage].forthX, y: path[currentStage].forthY },
-            { x: path[currentStage].finalX, y: path[currentStage].finalY }
+        { x: pathData.firstX, y: pathData.firstY },
+        { x: pathData.secondX, y: pathData.secondY },
+        { x: pathData.thirdX, y: pathData.thirdY },
+        { x: pathData.forthX, y: pathData.forthY },
+        { x: pathData.finalX, y: pathData.finalY }
         ];
     }
 }
@@ -515,7 +526,7 @@ function handleEnemies() {
         }
 
         if (enemies[i].health <= 0) {
-            let gainedResources = enemies[i].maxHealth / 10;
+            let gainedResources = enemies[i].maxHealth / 2;
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPositions.indexOf(enemies[i].y);
@@ -529,7 +540,8 @@ function handleEnemies() {
 
     // Enemy spawning logic
     if (frame % enemiesInterval === 0 && score < winningScore) {
-        let path = Math.floor(Math.random() * 3); // Random path
+        // let path = Math.floor(Math.random() * 3); // Random path
+        // let path = currentStage;
         let verticalPosition = (path * cellSize + cellGap) + cellSize;
 
         // Choose a random enemy type for each spawn
@@ -542,7 +554,100 @@ function handleEnemies() {
     }
 }
 
+let resources = [];
+const amounts = [30, 50, 70]; // Possible resource amounts
+let isGameReset = false;
+
+const resourceTypes = [
+    { spritePath: 'Sprites/Resources/Bronze/Bronze_', numFrames: 30, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
+];
+
+
+class Resource {
+    constructor() {
+        const typeConfig = resourceTypes[0]; // Currently only one type, but could add more types later
+
+        this.x = Math.random() * (canvas.width - cellSize); // Random X position within canvas
+        this.y = Math.random() > 0.5 ? 50 : 75; // Random Y position (50 or 75)
+        this.width = typeConfig.width;
+        this.height = typeConfig.height;
+        this.animationSpeed = typeConfig.animationSpeed;
+        this.spriteImages = [];
+        this.currentFrame = 0;
+        this.amount = Math.random() > 0.5 ? 30 : 50; // Assign a random amount (30 or 50)
+
+        // Load each image frame for the resource animation
+        for (let i = 1; i <= typeConfig.numFrames; i++) {
+            const img = new Image();
+            img.src = `${typeConfig.spritePath}${i}.png`; // Path to individual image files
+            this.spriteImages.push(img);
+        }
+    }
+
+    update() {
+        // Update the sprite animation frame
+        if (frame % this.animationSpeed === 0) {
+            this.currentFrame = (this.currentFrame + 1) % this.spriteImages.length;
+        }
+    }
+
+    draw() {
+        // Draw the current sprite (image from the sequence)
+        const currentSprite = this.spriteImages[this.currentFrame];
+        if (currentSprite.complete) {
+            ctx.drawImage(currentSprite, this.x, this.y, this.width * 1, this.height * 1); // Draw sprite at the correct position
+        }
+
+        // Draw the resource value on top of the sprite
+        ctx.fillStyle = 'black'; // Text color
+        ctx.font = '20px Arial'; // Font size and family
+        ctx.fillText(this.amount, this.x + 15, this.y + 25); // Position the value text inside the sprite
+    }
+}
+
+// Function to drop a new resource at regular intervals and handle collection
+function dropResources() {
+    
+    
+    if (isGameReset) {
+        // Skip resource spawning for the first frame after reset
+        isGameReset = false; // Reset the flag to avoid skipping on future frames
+        return;
+    }
+    if (frame % 500 === 0 && score < winningScore) { // Spawn new resource every 500 frames
+        const resource = new Resource(); // Create a new resource
+        resource.draw();
+        resources.push(resource); // Add the resource to the resources array
+    }
+
+    // Draw all resources
+    resources.forEach(resource => {
+        resource.update();
+        resource.draw();
+    });
+
+}function handleMouseClick(mouseX, mouseY) {
+    // Check if the click is on any resource
+    for (let i = 0; i < resources.length; i++) {
+        const resource = resources[i];
+
+        // Check if the click is within the bounds of the resource
+        if (mouseX > resource.x && mouseX < resource.x + resource.width &&
+            mouseY > resource.y && mouseY < resource.y + resource.height) {
+
+            numberOfResources += resource.amount; // Add the resource amount to player's total
+            resources.splice(i, 1); // Remove the resource from the array
+            i--; // Adjust index to account for the removed resource
+            break; // Exit the loop since only one resource is collected at a time
+        }
+    }
+}
+
+
+
+
 function handleResources() {
+    
     ctx.fillStyle = '#424f34';
     ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
     // Draw the black border around the resource bar area
@@ -558,6 +663,8 @@ function handleResources() {
 
     drawHealthBar();
 }
+
+
 
 function handleGameStatus() {    
 
@@ -628,6 +735,11 @@ function animate(timestamp) {
         handleProjectiles();
         handleEnemies();
         handleGameStatus();
+        dropResources();
+        if (mouse.x && mouse.y) {
+            handleMouseClick(mouse.x, mouse.y);
+        }
+
         frame++;
     }
 
@@ -641,6 +753,7 @@ function collision(first, second) {
         first.y + first.height < second.y)) {
         return true;
     }
+    return false;
 }
 
 function resetGame() {
@@ -651,7 +764,8 @@ function resetGame() {
   score = 0;
   playerHealth = maxHealth;
   gameWin = false
-
+  resources = [];
+  isGameReset = true;
   // Clear all game elements
   gameGrid.length = 0;
   defenders.length = 0;
@@ -692,21 +806,51 @@ document.getElementById('restartButton').addEventListener('click', () => {
   // Play interaction sound
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
-
-  resetGame();
+    if(currentStage == 1){
+        startGame(1);
+        numberOfResources = 300;
+        enemiesInterval = 600;
+        winningScore = 550;
+        handleInteraction();
+    }
+    else if (currentStage == 2){
+        startGame(2);  // Start game with stage 2
+        numberOfResources = 400;
+        enemiesInterval = 700;
+        winningScore = 1550;
+        handleInteraction();
+    }
+    else if (currentStage == 3){
+        startGame(3);  // Start game with stage 2
+        numberOfResources = 500;
+        enemiesInterval = 800;
+        winningScore = 2550;
+         handleInteraction();
+    }
+  //resetGame();
   gameStarted = true;
   gamePaused = false;
   requestAnimationFrame(animate);
   bgMusic.currentTime = 0;
 });
 
+document.getElementById('MainMenuButton').addEventListener('click', () => {
+    // Play interaction sound
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+  
+    location.reload();
+    requestAnimationFrame(animate);
+    
+  });
 
 // Start Game Function
 function startGame(stage) {
   currentStage = stage;
   document.getElementById('menu').style.display = 'none';
   canvas.style.display = 'block';
-  document.getElementById('gameControls').style.display = 'flex'; // Show controls
+  document.getElementById('gameControls').style.display = 'flex';
+  
   resetGame(); // Reset the game on new stage
   createGrid();
   gameStarted = true;
@@ -730,6 +874,9 @@ document.getElementById('stage1').addEventListener('click', function () {
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
     startGame(1);  // Start game with stage 1
+    numberOfResources = 300;
+    enemiesInterval = 600;
+    winningScore = 550;
     handleInteraction();
 });
 
@@ -738,6 +885,9 @@ document.getElementById('stage2').addEventListener('click', function () {
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
     startGame(2);  // Start game with stage 2
+    numberOfResources = 400;
+    enemiesInterval = 700;
+    winningScore = 1550;
     handleInteraction();
 });
 
@@ -746,6 +896,9 @@ document.getElementById('stage3').addEventListener('click', function () {
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
     startGame(3);  // Start game with stage 2
+   numberOfResources = 500;
+   enemiesInterval = 800;
+   winningScore = 2550;
     handleInteraction();
 });
 
