@@ -45,7 +45,7 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 60; // Set desired frames per second
+const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
@@ -108,22 +108,44 @@ const stageMaps = {
     ]
 };
 
-const path = {
-    1: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }],
+const spawnPoint = [
+    {x: 100, y: 50}, //Default
+    {x: 100, y: 50},
+    {x: 100, y: 600},
+    {x: 50, y: 50}
+];
 
-    2: [{ firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 }],
+const path = [
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }, //Default
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+    { firstX: 100, firstY: 600, secondX: 100, secondY: 375, thirdX: 825, thirdY: 375, forthX: 825, forthY: 100, finalX: 825, finalY: 100 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
+];
 
-    3: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }]
-}
+const defenderTypes = [
+    {
+        name: 'Archer',
+        sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
+        cost: 100,
+        range: 150,
+        attackSpeed: 80,
+    },
+    {
+        name: 'Mage',
+        sprites: ['Sprites/Defender/Tower2_001.png', 'Sprites/Defender/Tower2_002.png', 'Sprites/Defender/Tower2_003.png'],
+        cost: 150,
+        range: 200,
+        attackSpeed: 100,
+    },
+    {
+        name: 'Cannon',
+        sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
+        cost: 200,
+        range: 100,
+        attackSpeed: 50,
+    }
+];
+let selectedDefender = defenderTypes[0]; // Default to the first type
 
 // Mouse tracking
 const mouse = {
@@ -272,22 +294,25 @@ function handleProjectiles() {
 
 // Defenders
 class Defender {
-    constructor(x, y) {
+    constructor(x, y, typeConfig) {
         this.x = x;
         this.y = y;
         this.width = cellSize - cellGap * 2;
         this.height = cellSize - cellGap * 2;
+        this.range = typeConfig.range;
+        this.attackSpeed = typeConfig.attackSpeed;
         this.shooting = false;
         this.health = 100;
         this.timer = 0;
-        this.range = 200;
+        //this.range = 200;
 
         // Array to hold sprite images
-        this.sprites = [
-            'Sprites/Defender/Tower2_001.png',  // Level 1
-            'Sprites/Defender/Tower2_002.png',  // Level 2
-            'Sprites/Defender/Tower2_003.png'   // Level 3 (max level)
-        ];
+        this.sprites = typeConfig.sprites;
+        //this.sprites = [
+        //    'Sprites/Defender/Tower2_001.png',  // Level 1
+        //    'Sprites/Defender/Tower2_002.png',  // Level 2
+        //    'Sprites/Defender/Tower2_003.png'   // Level 3 (max level)
+        //];
 
         this.currentSpriteIndex = 0; // Start with the first sprite
         this.spriteImage = new Image();
@@ -297,7 +322,7 @@ class Defender {
         this.upgradable = true;  // Track whether the defender can still be upgraded
 
         // Initial attack speed
-        this.attackSpeed = 100;  // Base attack speed in ms (Level 1)
+        //this.attackSpeed = 100;  // Base attack speed in ms (Level 1)
     }
 
     // Method to upgrade the sprite and attack speed (called when clicked)
@@ -395,11 +420,11 @@ canvas.addEventListener('click', function () {
     }
 
     let defenderCost = 100;
-    if (numberOfResources >= defenderCost) {
+    if (numberOfResources >= selectedDefender.cost) {
         buildTowerSound.currentTime = 0; //Reset the sound effect of build tower
         buildTowerSound.play();
-        defenders.push(new Defender(gridPositionX, gridPositionY));
-        numberOfResources -= defenderCost;
+        defenders.push(new Defender(gridPositionX, gridPositionY, selectedDefender));
+        numberOfResources -= selectedDefender.cost;
     }
 });
 
@@ -441,8 +466,8 @@ class Enemy {
     constructor(typeIndex) {
         const typeConfig = enemyTypes[typeIndex];
 
-        this.x = 100;
-        this.y = 50;
+        this.x = spawnPoint[currentStage].x;
+        this.y = spawnPoint[currentStage].y;
         this.width = typeConfig.size;
         this.height = typeConfig.size;
         this.speed = typeConfig.speed;
@@ -494,14 +519,13 @@ class Enemy {
         }
     }
 
-    createPath(pathArray) {
-        const pathData = pathArray[currentStage];
+    createPath() {
         return [
-        { x: pathData.firstX, y: pathData.firstY },
-        { x: pathData.secondX, y: pathData.secondY },
-        { x: pathData.thirdX, y: pathData.thirdY },
-        { x: pathData.forthX, y: pathData.forthY },
-        { x: pathData.finalX, y: pathData.finalY }
+            { x: path[currentStage].firstX, y: path[currentStage].firstY },
+            { x: path[currentStage].secondX, y: path[currentStage].secondY },
+            { x: path[currentStage].thirdX, y: path[currentStage].thirdY },
+            { x: path[currentStage].forthX, y: path[currentStage].forthY },
+            { x: path[currentStage].finalX, y: path[currentStage].finalY }
         ];
     }
 }
@@ -776,6 +800,23 @@ function resetGame() {
   createGrid(); // Recreate the game grid
 }
 
+// Add event listeners for defender selection
+document.getElementById('defender1').addEventListener('click', () => {
+    selectedDefender = defenderTypes[0]; // Select Defender 1
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
+document.getElementById('defender2').addEventListener('click', () => {
+    selectedDefender = defenderTypes[1]; // Select Defender 2
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
+document.getElementById('defender3').addEventListener('click', () => {
+    selectedDefender = defenderTypes[2]; // Select Defender 3
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
+
 // Button Event Listeners
 document.getElementById('startButton').addEventListener('click', () => {
   // Play interaction sound
@@ -849,7 +890,9 @@ function startGame(stage) {
   currentStage = stage;
   document.getElementById('menu').style.display = 'none';
   canvas.style.display = 'block';
+  document.getElementById('gameContainer').style.display = 'flex';
   document.getElementById('gameControls').style.display = 'flex';
+  document.getElementById('defenderSelection').style.display = 'flex';
   
   resetGame(); // Reset the game on new stage
   createGrid();
