@@ -25,6 +25,16 @@
             margin-top: 20px;
             text-align: center;
         }
+        #gameContainer {
+            display: none;
+        }
+        #defenderSelection {
+            display: none; /* Initially hidden */
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         button {
             padding: 10px 20px;
             margin: 10px;
@@ -39,7 +49,17 @@
         <button id="stage2">Stage 2</button>
         <button id="stage3">Stage 3</button>
     </div>
-    <canvas id="myCanvas"></canvas>
+
+    <div id="gameContainer">
+        <canvas id="myCanvas"></canvas>
+        <div id="defenderSelection">
+            <h2>Select Defender</h2>
+            <img src="Sprites/Defender/Tower1_001.png" alt="Defender 1" id="defender1" style="cursor: pointer; margin-bottom: 10px;">
+            <img src="Sprites/Defender/Tower2_001.png" alt="Defender 2" id="defender2" style="cursor: pointer; margin-bottom: 10px;">
+            <img src="Sprites/Defender/Tower3_001.png" alt="Defender 3" id="defender3" style="cursor: pointer; margin-bottom: 10px;">
+        </div>
+    </div>
+
     
     <div id="gameControls">
         <button id="startButton">Start</button>
@@ -47,6 +67,7 @@
         <button id="restartButton">Restart</button>
         <button id="MainMenuButton">Main Menu</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
