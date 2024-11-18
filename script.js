@@ -18,6 +18,8 @@ const destroyTowerSound = new Audio('Audio/tower destroyed.mp3');
 const gameCompleteSound = new Audio('Audio/game-level-complete.mp3');
 const gameOverSound = new Audio('Audio/game over.mp3');
 const hpDrop = new Audio('Audio/player hp drop.mp3');
+const collectResources = new Audio('Audio/Collect Coins.wav');
+const collectPowerUp = new Audio('Audio/Collect PowerUp.wav');
 
 // Global variables
 const cellSize = 75;
@@ -122,7 +124,7 @@ const spawnPoint = [
 
 const path = [
     { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }, //Default
-    { firstX: 100, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
     { firstX: 100, firstY: 600, secondX: 100, secondY: 375, thirdX: 825, thirdY: 375, forthX: 825, forthY: 100, finalX: 825, finalY: 100 },
     { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
 ];
@@ -146,7 +148,7 @@ const defenderTypes = [
     },
     {
         name: 'Cannon',
-        sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
+        sprites: ['Sprites/Defender/Tower3_001.png', 'Sprites/Defender/Tower3_002.png', 'Sprites/Defender/Tower3_003.png'],
         cost: 200,
         range: 300,
         attackSpeed: 100,
@@ -460,8 +462,8 @@ function handleDefenders() {
 // Enemies
 const enemyTypes = [
     { size: 50, speed: 0.5, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/slime1_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 70, speed: 0.4, animationSpeed: 3, health: 150, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 80, speed: 0.2, animationSpeed: 3, health: 200, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
+    { size: 70, speed: 0.4, animationSpeed: 3, health: 250, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 80, speed: 0.2, animationSpeed: 3, health: 500, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
 ];
 
 class Enemy {
@@ -583,6 +585,7 @@ function handleEnemies() {
 let resources = [];
 const amounts = [30, 50, 70]; // Possible resource amounts
 let isGameReset = false;
+let isGameResetPU = false;
 
 const resourceTypes = [
     { spritePath: 'Sprites/Resources/Bronze/Bronze_', numFrames: 30, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
@@ -662,7 +665,8 @@ function handleMouseClick(mouseX, mouseY) {
         // Check if the click is within the bounds of the resource
         if (mouseX > resource.x && mouseX < resource.x + resource.width &&
             mouseY > resource.y && mouseY < resource.y + resource.height) {
-
+                collectResources.currentTime = 0;
+                collectResources.play();
             numberOfResources += resource.amount; // Add the resource amount to player's total
             resources.splice(i, 1); // Remove the resource from the array
             i--; // Adjust index to account for the removed resource
@@ -684,13 +688,13 @@ function handleResources() {
     ctx.font = '30px Arial';
     ctx.fillText('Resources: ' + numberOfResources, 20, 45);
     ctx.fillText('|   Score: ' + score, 270, 45);
-    ctx.fillText('|  Level: ' + (currentStage !== null ? currentStage : 'N/A'), 450, 45);
+    ctx.fillText('|  Level: ' + (currentStage !== null ? currentStage : 'N/A'), 500, 45);
 
     drawHealthBar();
 }
 
 const powerUpSprites = [
-    { spritePath: 'Sprites/PowerUp/JumpBoostAssets_', numFrames: 9, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
+    { spritePath: 'Sprites/PowerUp/JumpBoostAssets_00', numFrames: 8, animationSpeed: 12, width: 50, height: 50, scaleX: 1, scaleY: 1 }
 ];
 
 class PowerUp {
@@ -740,9 +744,9 @@ class PowerUp {
 
 function spawnPowerUp() {
 
-    if (isGameReset) {
+    if (isGameResetPU) {
         // Skip resource spawning for the first frame after reset
-        isGameReset = false; // Reset the flag to avoid skipping on future frames
+        isGameResetPU = false; // Reset the flag to avoid skipping on future frames
         return;
     }
 
@@ -752,12 +756,15 @@ function spawnPowerUp() {
 }
 
 function handlePowerUps() {
+    
     powerUps.forEach((powerUp, index) => {
         powerUp.update();
         powerUp.draw();
 
         // Check if power-up is collected
         if (mouse.x && mouse.y && powerUp.isCollected(mouse.x, mouse.y)) {
+            collectPowerUp.currentTime = 0;
+            collectPowerUp.play();
             powerUps.splice(index, 1); // Remove power-up
             activateFreeze(); // Activate freeze effect
         }
@@ -773,6 +780,8 @@ function handlePowerUps() {
 
 function activateFreeze() {
     freezeActive = true;
+    collectPowerUp.currentTime = 0;
+    collectPowerUp.play();
     freezeTimer = 300; // Freeze for 300 frames
     enemies.forEach(enemy => (enemy.movement = 0)); // Stop enemy movement
 }
@@ -884,7 +893,9 @@ function resetGame() {
   playerHealth = maxHealth;
   gameWin = false
   resources = [];
+  powerUps = [];
   isGameReset = true;
+  isGameResetPU = true;
   // Clear all game elements
   gameGrid.length = 0;
   defenders.length = 0;
@@ -944,6 +955,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
   uiInteractionSound.play();
     if(currentStage == 1){
         startGame(1);
+        
         numberOfResources = 300;
         enemiesInterval = 600;
         winningScore = 550;
@@ -951,6 +963,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
     }
     else if (currentStage == 2){
         startGame(2);  // Start game with stage 2
+        
         numberOfResources = 400;
         enemiesInterval = 700;
         winningScore = 1550;
@@ -958,6 +971,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
     }
     else if (currentStage == 3){
         startGame(3);  // Start game with stage 2
+        
         numberOfResources = 500;
         enemiesInterval = 800;
         winningScore = 2550;
