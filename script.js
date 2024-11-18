@@ -18,6 +18,8 @@ const destroyTowerSound = new Audio('Audio/tower destroyed.mp3');
 const gameCompleteSound = new Audio('Audio/game-level-complete.mp3');
 const gameOverSound = new Audio('Audio/game over.mp3');
 const hpDrop = new Audio('Audio/player hp drop.mp3');
+const collectResources = new Audio('Audio/Collect Coins.wav');
+const collectPowerUp = new Audio('Audio/Collect PowerUp.wav');
 
 // Global variables
 const cellSize = 75;
@@ -45,7 +47,12 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
-const fps = 60; // Set desired frames per second
+//Power Up
+let powerUps = [];
+let freezeActive = false;
+let freezeTimer = 0;
+
+const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
 
@@ -108,22 +115,47 @@ const stageMaps = {
     ]
 };
 
-const path = {
-    1: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }],
+const spawnPoint = [
+    {x: 100, y: 50}, //Default
+    {x: 100, y: 50},
+    {x: 100, y: 600},
+    {x: 50, y: 50}
+];
 
-    2: [{ firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 },
-        { firstX: 600, firstY: 700, secondX: 600, secondY: 700, thirdX: 600, thirdY: 700, forthX: 600, forthY: 700, finalX: 600, finalY: 700 }],
+const path = [
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }, //Default
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
+    { firstX: 100, firstY: 600, secondX: 100, secondY: 375, thirdX: 825, thirdY: 375, forthX: 825, forthY: 100, finalX: 825, finalY: 100 },
+    { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }
+];
 
-    3: [{ firstX: 100, firstY: 100, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 125, firstY: 125, secondX: 100, secondY: 450, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 525, forthX: 500, forthY: 200, finalX: 825, finalY: 200 },
-        { firstX: 100, firstY: 125, secondX: 100, secondY: 500, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }]
-}
+const defenderTypes = [
+    {
+        name: 'Archer',
+        sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
+        cost: 100,
+        range: 150,
+        attackSpeed: 100,
+        health: 100,
+    },
+    {
+        name: 'Mage',
+        sprites: ['Sprites/Defender/Tower2_001.png', 'Sprites/Defender/Tower2_002.png', 'Sprites/Defender/Tower2_003.png'],
+        cost: 150,
+        range: 10,
+        attackSpeed: 1000,
+        health: 1000,
+    },
+    {
+        name: 'Cannon',
+        sprites: ['Sprites/Defender/Tower3_001.png', 'Sprites/Defender/Tower3_002.png', 'Sprites/Defender/Tower3_003.png'],
+        cost: 200,
+        range: 300,
+        attackSpeed: 100,
+        health: 100,
+    }
+];
+let selectedDefender = defenderTypes[0]; // Default to the first type
 
 // Mouse tracking
 const mouse = {
@@ -272,22 +304,20 @@ function handleProjectiles() {
 
 // Defenders
 class Defender {
-    constructor(x, y) {
+    constructor(x, y, typeConfig) {
         this.x = x;
         this.y = y;
         this.width = cellSize - cellGap * 2;
         this.height = cellSize - cellGap * 2;
+        this.range = typeConfig.range;
+        this.attackSpeed = typeConfig.attackSpeed;
         this.shooting = false;
-        this.health = 100;
+        this.maxHealth = typeConfig.health;
+        this.health = this.maxHealth;
         this.timer = 0;
-        this.range = 200;
 
         // Array to hold sprite images
-        this.sprites = [
-            'Sprites/Defender/Tower2_001.png',  // Level 1
-            'Sprites/Defender/Tower2_002.png',  // Level 2
-            'Sprites/Defender/Tower2_003.png'   // Level 3 (max level)
-        ];
+        this.sprites = typeConfig.sprites;
 
         this.currentSpriteIndex = 0; // Start with the first sprite
         this.spriteImage = new Image();
@@ -295,9 +325,6 @@ class Defender {
         this.scaleX = 1; // Define any scaling as needed
         this.scaleY = 1;
         this.upgradable = true;  // Track whether the defender can still be upgraded
-
-        // Initial attack speed
-        this.attackSpeed = 100;  // Base attack speed in ms (Level 1)
     }
 
     // Method to upgrade the sprite and attack speed (called when clicked)
@@ -332,9 +359,11 @@ class Defender {
 
             // Increase attack speed with each upgrade
             if (this.currentSpriteIndex === 1) {
-                this.attackSpeed = 50;  // Attack speed at Level 2 (faster shooting)
+                this.attackSpeed -= 30;  // Attack speed at Level 2 (faster shooting)
+                this.health = this.maxHealth*1.5;
             } else if (this.currentSpriteIndex === 2) {
-                this.attackSpeed = 30;  // Attack speed at Level 3 (fastest shooting)
+                this.attackSpeed -= 50;  // Attack speed at Level 3 (fastest shooting)
+                this.health = this.maxHealth*2;
             }
         }
     }
@@ -395,11 +424,11 @@ canvas.addEventListener('click', function () {
     }
 
     let defenderCost = 100;
-    if (numberOfResources >= defenderCost) {
+    if (numberOfResources >= selectedDefender.cost) {
         buildTowerSound.currentTime = 0; //Reset the sound effect of build tower
         buildTowerSound.play();
-        defenders.push(new Defender(gridPositionX, gridPositionY));
-        numberOfResources -= defenderCost;
+        defenders.push(new Defender(gridPositionX, gridPositionY, selectedDefender));
+        numberOfResources -= selectedDefender.cost;
     }
 });
 
@@ -433,16 +462,16 @@ function handleDefenders() {
 // Enemies
 const enemyTypes = [
     { size: 50, speed: 0.5, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/slime1_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 70, speed: 0.4, animationSpeed: 3, health: 150, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 80, speed: 0.2, animationSpeed: 3, health: 200, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
+    { size: 70, speed: 0.4, animationSpeed: 3, health: 250, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 80, speed: 0.2, animationSpeed: 3, health: 500, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
 ];
 
 class Enemy {
     constructor(typeIndex) {
         const typeConfig = enemyTypes[typeIndex];
 
-        this.x = 100;
-        this.y = 50;
+        this.x = spawnPoint[currentStage].x;
+        this.y = spawnPoint[currentStage].y;
         this.width = typeConfig.size;
         this.height = typeConfig.size;
         this.speed = typeConfig.speed;
@@ -494,14 +523,13 @@ class Enemy {
         }
     }
 
-    createPath(pathArray) {
-        const pathData = pathArray[currentStage];
+    createPath() {
         return [
-        { x: pathData.firstX, y: pathData.firstY },
-        { x: pathData.secondX, y: pathData.secondY },
-        { x: pathData.thirdX, y: pathData.thirdY },
-        { x: pathData.forthX, y: pathData.forthY },
-        { x: pathData.finalX, y: pathData.finalY }
+            { x: path[currentStage].firstX, y: path[currentStage].firstY },
+            { x: path[currentStage].secondX, y: path[currentStage].secondY },
+            { x: path[currentStage].thirdX, y: path[currentStage].thirdY },
+            { x: path[currentStage].forthX, y: path[currentStage].forthY },
+            { x: path[currentStage].finalX, y: path[currentStage].finalY }
         ];
     }
 }
@@ -557,6 +585,7 @@ function handleEnemies() {
 let resources = [];
 const amounts = [30, 50, 70]; // Possible resource amounts
 let isGameReset = false;
+let isGameResetPU = false;
 
 const resourceTypes = [
     { spritePath: 'Sprites/Resources/Bronze/Bronze_', numFrames: 30, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
@@ -626,7 +655,9 @@ function dropResources() {
         resource.draw();
     });
 
-}function handleMouseClick(mouseX, mouseY) {
+}
+
+function handleMouseClick(mouseX, mouseY) {
     // Check if the click is on any resource
     for (let i = 0; i < resources.length; i++) {
         const resource = resources[i];
@@ -634,7 +665,8 @@ function dropResources() {
         // Check if the click is within the bounds of the resource
         if (mouseX > resource.x && mouseX < resource.x + resource.width &&
             mouseY > resource.y && mouseY < resource.y + resource.height) {
-
+                collectResources.currentTime = 0;
+                collectResources.play();
             numberOfResources += resource.amount; // Add the resource amount to player's total
             resources.splice(i, 1); // Remove the resource from the array
             i--; // Adjust index to account for the removed resource
@@ -642,9 +674,6 @@ function dropResources() {
         }
     }
 }
-
-
-
 
 function handleResources() {
     
@@ -659,11 +688,108 @@ function handleResources() {
     ctx.font = '30px Arial';
     ctx.fillText('Resources: ' + numberOfResources, 20, 45);
     ctx.fillText('|   Score: ' + score, 270, 45);
-    ctx.fillText('|  Level: ' + (currentStage !== null ? currentStage : 'N/A'), 450, 45);
+    ctx.fillText('|  Level: ' + (currentStage !== null ? currentStage : 'N/A'), 500, 45);
 
     drawHealthBar();
 }
 
+const powerUpSprites = [
+    { spritePath: 'Sprites/PowerUp/JumpBoostAssets_00', numFrames: 8, animationSpeed: 12, width: 50, height: 50, scaleX: 1, scaleY: 1 }
+];
+
+class PowerUp {
+    constructor() {
+        const typeConfig = powerUpSprites[0];
+
+        this.x = Math.random() * (canvas.width - cellSize); // Random X position
+        this.y = Math.random() * (canvas.height - cellSize); // Random Y position
+        this.width = typeConfig.width;
+        this.height = typeConfig.height;
+        this.duration = 300; // Freeze duration in frames
+        this.animationSpeed = typeConfig.animationSpeed;
+        this.spriteImages = [];
+        this.currentFrame = 0;
+
+        for (let i = 1; i <= typeConfig.numFrames; i++) {
+            const img = new Image();
+            img.src = `${typeConfig.spritePath}${i}.png`; // Path to individual image files
+            this.spriteImages.push(img);
+        }
+
+    }
+    update() {
+        // Update the sprite animation frame
+        if (frame % this.animationSpeed === 0) {
+            this.currentFrame = (this.currentFrame + 1) % this.spriteImages.length;
+        }
+    }
+
+    draw() {
+        // Draw the current sprite (image from the sequence)
+        const currentSprite = this.spriteImages[this.currentFrame];
+        if (currentSprite.complete) {
+            ctx.drawImage(currentSprite, this.x, this.y, this.width * 1, this.height * 1); // Draw sprite at the correct position
+        }
+    }
+
+    isCollected(mouseX, mouseY) {
+        return (
+            mouseX > this.x &&
+            mouseX < this.x + this.width &&
+            mouseY > this.y &&
+            mouseY < this.y + this.height
+        );
+    }
+}
+
+function spawnPowerUp() {
+
+    if (isGameResetPU) {
+        // Skip resource spawning for the first frame after reset
+        isGameResetPU = false; // Reset the flag to avoid skipping on future frames
+        return;
+    }
+
+    if (frame % 1000 === 0 && score < winningScore && Math.random() % 2) { // Every 1000 frames
+        powerUps.push(new PowerUp());
+    }
+}
+
+function handlePowerUps() {
+    
+    powerUps.forEach((powerUp, index) => {
+        powerUp.update();
+        powerUp.draw();
+
+        // Check if power-up is collected
+        if (mouse.x && mouse.y && powerUp.isCollected(mouse.x, mouse.y)) {
+            collectPowerUp.currentTime = 0;
+            collectPowerUp.play();
+            powerUps.splice(index, 1); // Remove power-up
+            activateFreeze(); // Activate freeze effect
+        }
+    });
+
+    if (freezeActive) {
+        freezeTimer--;
+        if (freezeTimer <= 0) {
+            deactivateFreeze();
+        }
+    }
+}
+
+function activateFreeze() {
+    freezeActive = true;
+    collectPowerUp.currentTime = 0;
+    collectPowerUp.play();
+    freezeTimer = 300; // Freeze for 300 frames
+    enemies.forEach(enemy => (enemy.movement = 0)); // Stop enemy movement
+}
+
+function deactivateFreeze() {
+    freezeActive = false;
+    enemies.forEach(enemy => (enemy.movement = enemy.speed)); // Restore enemy movement
+}
 
 
 function handleGameStatus() {    
@@ -734,8 +860,10 @@ function animate(timestamp) {
         handleResources();
         handleProjectiles();
         handleEnemies();
+        handlePowerUps();
         handleGameStatus();
         dropResources();
+        spawnPowerUp();
         if (mouse.x && mouse.y) {
             handleMouseClick(mouse.x, mouse.y);
         }
@@ -765,7 +893,9 @@ function resetGame() {
   playerHealth = maxHealth;
   gameWin = false
   resources = [];
+  powerUps = [];
   isGameReset = true;
+  isGameResetPU = true;
   // Clear all game elements
   gameGrid.length = 0;
   defenders.length = 0;
@@ -775,6 +905,23 @@ function resetGame() {
 
   createGrid(); // Recreate the game grid
 }
+
+// Add event listeners for defender selection
+document.getElementById('defender1').addEventListener('click', () => {
+    selectedDefender = defenderTypes[0]; // Select Defender 1
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
+document.getElementById('defender2').addEventListener('click', () => {
+    selectedDefender = defenderTypes[1]; // Select Defender 2
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
+document.getElementById('defender3').addEventListener('click', () => {
+    selectedDefender = defenderTypes[2]; // Select Defender 3
+    uiInteractionSound.currentTime = 0;
+    uiInteractionSound.play();
+});
 
 // Button Event Listeners
 document.getElementById('startButton').addEventListener('click', () => {
@@ -808,6 +955,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
   uiInteractionSound.play();
     if(currentStage == 1){
         startGame(1);
+        
         numberOfResources = 300;
         enemiesInterval = 600;
         winningScore = 550;
@@ -815,6 +963,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
     }
     else if (currentStage == 2){
         startGame(2);  // Start game with stage 2
+        
         numberOfResources = 400;
         enemiesInterval = 700;
         winningScore = 1550;
@@ -822,6 +971,7 @@ document.getElementById('restartButton').addEventListener('click', () => {
     }
     else if (currentStage == 3){
         startGame(3);  // Start game with stage 2
+        
         numberOfResources = 500;
         enemiesInterval = 800;
         winningScore = 2550;
@@ -849,7 +999,9 @@ function startGame(stage) {
   currentStage = stage;
   document.getElementById('menu').style.display = 'none';
   canvas.style.display = 'block';
+  document.getElementById('gameContainer').style.display = 'flex';
   document.getElementById('gameControls').style.display = 'flex';
+  document.getElementById('defenderSelection').style.display = 'flex';
   
   resetGame(); // Reset the game on new stage
   createGrid();
