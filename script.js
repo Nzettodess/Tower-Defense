@@ -690,7 +690,7 @@ function handleResources() {
 }
 
 const powerUpSprites = [
-    { spritePath: 'Sprites/Resources/Bronze/Bronze_', numFrames: 30, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
+    { spritePath: 'Sprites/PowerUp/JumpBoostAssets_', numFrames: 9, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
 ];
 
 class PowerUp {
