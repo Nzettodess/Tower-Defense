@@ -45,6 +45,11 @@ const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
 
+//Power Up
+let powerUps = [];
+let freezeActive = false;
+let freezeTimer = 0;
+
 const fps = 120; // Set desired frames per second
 const interval = 1000 / fps; // Calculate time between frames in milliseconds
 let lastTime = 0;
@@ -128,21 +133,24 @@ const defenderTypes = [
         sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
         cost: 100,
         range: 150,
-        attackSpeed: 80,
+        attackSpeed: 100,
+        health: 100,
     },
     {
         name: 'Mage',
         sprites: ['Sprites/Defender/Tower2_001.png', 'Sprites/Defender/Tower2_002.png', 'Sprites/Defender/Tower2_003.png'],
         cost: 150,
-        range: 200,
-        attackSpeed: 100,
+        range: 10,
+        attackSpeed: 1000,
+        health: 1000,
     },
     {
         name: 'Cannon',
         sprites: ['Sprites/Defender/Tower1_001.png', 'Sprites/Defender/Tower1_002.png', 'Sprites/Defender/Tower1_003.png'],
         cost: 200,
-        range: 100,
-        attackSpeed: 50,
+        range: 300,
+        attackSpeed: 100,
+        health: 100,
     }
 ];
 let selectedDefender = defenderTypes[0]; // Default to the first type
@@ -302,17 +310,12 @@ class Defender {
         this.range = typeConfig.range;
         this.attackSpeed = typeConfig.attackSpeed;
         this.shooting = false;
-        this.health = 100;
+        this.maxHealth = typeConfig.health;
+        this.health = this.maxHealth;
         this.timer = 0;
-        //this.range = 200;
 
         // Array to hold sprite images
         this.sprites = typeConfig.sprites;
-        //this.sprites = [
-        //    'Sprites/Defender/Tower2_001.png',  // Level 1
-        //    'Sprites/Defender/Tower2_002.png',  // Level 2
-        //    'Sprites/Defender/Tower2_003.png'   // Level 3 (max level)
-        //];
 
         this.currentSpriteIndex = 0; // Start with the first sprite
         this.spriteImage = new Image();
@@ -320,9 +323,6 @@ class Defender {
         this.scaleX = 1; // Define any scaling as needed
         this.scaleY = 1;
         this.upgradable = true;  // Track whether the defender can still be upgraded
-
-        // Initial attack speed
-        //this.attackSpeed = 100;  // Base attack speed in ms (Level 1)
     }
 
     // Method to upgrade the sprite and attack speed (called when clicked)
@@ -357,9 +357,11 @@ class Defender {
 
             // Increase attack speed with each upgrade
             if (this.currentSpriteIndex === 1) {
-                this.attackSpeed = 50;  // Attack speed at Level 2 (faster shooting)
+                this.attackSpeed -= 30;  // Attack speed at Level 2 (faster shooting)
+                this.health = this.maxHealth*1.5;
             } else if (this.currentSpriteIndex === 2) {
-                this.attackSpeed = 30;  // Attack speed at Level 3 (fastest shooting)
+                this.attackSpeed -= 50;  // Attack speed at Level 3 (fastest shooting)
+                this.health = this.maxHealth*2;
             }
         }
     }
@@ -650,7 +652,9 @@ function dropResources() {
         resource.draw();
     });
 
-}function handleMouseClick(mouseX, mouseY) {
+}
+
+function handleMouseClick(mouseX, mouseY) {
     // Check if the click is on any resource
     for (let i = 0; i < resources.length; i++) {
         const resource = resources[i];
@@ -666,9 +670,6 @@ function dropResources() {
         }
     }
 }
-
-
-
 
 function handleResources() {
     
@@ -688,6 +689,98 @@ function handleResources() {
     drawHealthBar();
 }
 
+const powerUpSprites = [
+    { spritePath: 'Sprites/Resources/Bronze/Bronze_', numFrames: 30, animationSpeed: 7, width: 50, height: 50, scaleX: 1, scaleY: 1 }
+];
+
+class PowerUp {
+    constructor() {
+        const typeConfig = powerUpSprites[0];
+
+        this.x = Math.random() * (canvas.width - cellSize); // Random X position
+        this.y = Math.random() * (canvas.height - cellSize); // Random Y position
+        this.width = typeConfig.width;
+        this.height = typeConfig.height;
+        this.duration = 300; // Freeze duration in frames
+        this.animationSpeed = typeConfig.animationSpeed;
+        this.spriteImages = [];
+        this.currentFrame = 0;
+
+        for (let i = 1; i <= typeConfig.numFrames; i++) {
+            const img = new Image();
+            img.src = `${typeConfig.spritePath}${i}.png`; // Path to individual image files
+            this.spriteImages.push(img);
+        }
+
+    }
+    update() {
+        // Update the sprite animation frame
+        if (frame % this.animationSpeed === 0) {
+            this.currentFrame = (this.currentFrame + 1) % this.spriteImages.length;
+        }
+    }
+
+    draw() {
+        // Draw the current sprite (image from the sequence)
+        const currentSprite = this.spriteImages[this.currentFrame];
+        if (currentSprite.complete) {
+            ctx.drawImage(currentSprite, this.x, this.y, this.width * 1, this.height * 1); // Draw sprite at the correct position
+        }
+    }
+
+    isCollected(mouseX, mouseY) {
+        return (
+            mouseX > this.x &&
+            mouseX < this.x + this.width &&
+            mouseY > this.y &&
+            mouseY < this.y + this.height
+        );
+    }
+}
+
+function spawnPowerUp() {
+
+    if (isGameReset) {
+        // Skip resource spawning for the first frame after reset
+        isGameReset = false; // Reset the flag to avoid skipping on future frames
+        return;
+    }
+
+    if (frame % 1000 === 0 && score < winningScore && Math.random() % 2) { // Every 1000 frames
+        powerUps.push(new PowerUp());
+    }
+}
+
+function handlePowerUps() {
+    powerUps.forEach((powerUp, index) => {
+        powerUp.update();
+        powerUp.draw();
+
+        // Check if power-up is collected
+        if (mouse.x && mouse.y && powerUp.isCollected(mouse.x, mouse.y)) {
+            powerUps.splice(index, 1); // Remove power-up
+            activateFreeze(); // Activate freeze effect
+        }
+    });
+
+    if (freezeActive) {
+        freezeTimer--;
+        if (freezeTimer <= 0) {
+            deactivateFreeze();
+        }
+    }
+}
+
+function activateFreeze() {
+    freezeActive = true;
+    freezeTimer = 300; // Freeze for 300 frames
+    enemies.forEach(enemy => (enemy.movement = 0)); // Stop enemy movement
+}
+
+function deactivateFreeze() {
+    freezeActive = false;
+    enemies.forEach(enemy => (enemy.movement = enemy.speed)); // Restore enemy movement
+}
 
 
 function handleGameStatus() {    
@@ -758,8 +851,10 @@ function animate(timestamp) {
         handleResources();
         handleProjectiles();
         handleEnemies();
+        handlePowerUps();
         handleGameStatus();
         dropResources();
+        spawnPowerUp();
         if (mouse.x && mouse.y) {
             handleMouseClick(mouse.x, mouse.y);
         }
