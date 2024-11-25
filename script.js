@@ -458,12 +458,14 @@ function handleDefenders() {
         }
     }
 }
-
+let enemy1Health = 100;
+let enemy2Health = 100;
+let enemy3Health = 100;
 // Enemies
 const enemyTypes = [
-    { size: 50, speed: 0.5, animationSpeed: 3, health: 100, spritePath: 'Sprites/Enemies/slime1_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 70, speed: 0.4, animationSpeed: 3, health: 250, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
-    { size: 80, speed: 0.2, animationSpeed: 3, health: 500, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
+    { size: 50, speed: 0.8, animationSpeed: 3, health: enemy1Health, spritePath: 'Sprites/Enemies/slime1_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 70, speed: 0.5, animationSpeed: 3, health: enemy2Health, spritePath: 'Sprites/Enemies/slime2_move_', numFrames: 7, scaleX: 1, scaleY: 1 },
+    { size: 80, speed: 0.3, animationSpeed: 3, health: enemy3Health, spritePath: 'Sprites/Enemies/slime3_move_', numFrames: 7, scaleX: 1, scaleY: 1 }
 ];
 
 class Enemy {
@@ -959,6 +961,10 @@ document.getElementById('restartButton').addEventListener('click', () => {
         numberOfResources = 300;
         enemiesInterval = 600;
         winningScore = 550;
+        enemy1Health = 100;
+        enemy2Health = 200;
+        enemy3Health = 500;
+        
         handleInteraction();
     }
     else if (currentStage == 2){
@@ -967,6 +973,9 @@ document.getElementById('restartButton').addEventListener('click', () => {
         numberOfResources = 400;
         enemiesInterval = 700;
         winningScore = 1550;
+        enemy1Health = 200;
+        enemy2Health = 350;
+        enemy3Health = 1000;
         handleInteraction();
     }
     else if (currentStage == 3){
@@ -975,6 +984,9 @@ document.getElementById('restartButton').addEventListener('click', () => {
         numberOfResources = 500;
         enemiesInterval = 800;
         winningScore = 2550;
+        enemy1Health = 300;
+        enemy2Health = 500;
+        enemy3Health = 1500;
          handleInteraction();
     }
   //resetGame();
@@ -1002,7 +1014,11 @@ function startGame(stage) {
   document.getElementById('gameContainer').style.display = 'flex';
   document.getElementById('gameControls').style.display = 'flex';
   document.getElementById('defenderSelection').style.display = 'flex';
-  
+
+    enemyTypes[0].health = enemy1Health;
+    enemyTypes[1].health = enemy2Health;
+    enemyTypes[2].health = enemy3Health;
+
   resetGame(); // Reset the game on new stage
   createGrid();
   gameStarted = true;
@@ -1025,10 +1041,21 @@ document.getElementById('stage1').addEventListener('click', function () {
     // Play interaction sound
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
+  enemyTypes[0].health = enemy1Health;
+    enemyTypes[1].health = enemy2Health;
+    enemyTypes[2].health = enemy3Health;
     startGame(1);  // Start game with stage 1
     numberOfResources = 300;
     enemiesInterval = 600;
     winningScore = 550;
+    enemy1Health = 100;
+        enemy2Health = 200;
+        enemy3Health = 500;
+        console.log(`Enemy health values:`, {
+            enemy1Health,
+            enemy2Health,
+            enemy3Health,
+        });
     handleInteraction();
 });
 
@@ -1036,10 +1063,16 @@ document.getElementById('stage2').addEventListener('click', function () {
    // Play interaction sound
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
+  enemyTypes[0].health = enemy1Health;
+    enemyTypes[1].health = enemy2Health;
+    enemyTypes[2].health = enemy3Health;
     startGame(2);  // Start game with stage 2
     numberOfResources = 400;
     enemiesInterval = 700;
     winningScore = 1550;
+    enemy1Health = 200;
+        enemy2Health = 350;
+        enemy3Health = 1000;
     handleInteraction();
 });
 
@@ -1047,10 +1080,17 @@ document.getElementById('stage3').addEventListener('click', function () {
    // Play interaction sound
   uiInteractionSound.currentTime = 0;
   uiInteractionSound.play();
+  
     startGame(3);  // Start game with stage 2
    numberOfResources = 500;
    enemiesInterval = 800;
    winningScore = 2550;
+   enemy1Health = 300;
+   enemy2Health = 500;
+   enemy3Health = 1500;
+   enemyTypes[0].health = enemy1Health;
+    enemyTypes[1].health = enemy2Health;
+    enemyTypes[2].health = enemy3Health;
     handleInteraction();
 });
 
