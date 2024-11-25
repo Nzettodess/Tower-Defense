@@ -125,7 +125,7 @@ const spawnPoint = [
 const path = [
     { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 500, thirdY: 500, forthX: 500, forthY: 200, finalX: 825, finalY: 200 }, //Default
     { firstX: 100, firstY: 125, secondX: 100, secondY: 525, thirdX: 825, thirdY: 450, forthX: 825, forthY: 450, finalX: 825, finalY: 450 },
-    { firstX: 100, firstY: 600, secondX: 100, secondY: 375, thirdX: 825, thirdY: 375, forthX: 825, forthY: 100, finalX: 825, finalY: 100 },
+    { firstX: 100, firstY: 600, secondX: 100, secondY: 350, thirdX: 825, thirdY: 350, forthX: 825, forthY: 100, finalX: 825, finalY: 100 },
     { firstX: 50, firstY: 450, secondX: 50, secondY: 500, thirdX: 750, thirdY: 500, forthX: 750, forthY: 50, finalX: 750, finalY: 50 }
 ];
 
